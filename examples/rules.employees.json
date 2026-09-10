@@ -1,0 +1,51 @@
+{
+  "delimiter": ",",
+  "allow_extra_columns": true,
+  "columns": {
+    "employee_id": {
+      "type": "integer",
+      "required": true,
+      "unique": true,
+      "min": 1
+    },
+    "full_name": {
+      "type": "string",
+      "required": true,
+      "min_length": 2,
+      "max_length": 60
+    },
+    "email": {
+      "type": "email",
+      "required": true,
+      "unique": true,
+      "case_sensitive": false
+    },
+    "department": {
+      "type": "string",
+      "required": true,
+      "allowed_values": ["Engineering", "Finance", "Sales", "HR"],
+      "case_sensitive": false
+    },
+    "salary": {
+      "type": "number",
+      "required": true,
+      "min": 20000,
+      "max": 500000
+    },
+    "hire_date": {
+      "type": "date",
+      "required": true,
+      "format": "%Y-%m-%d",
+      "min": "2000-01-01"
+    },
+    "is_active": {
+      "type": "boolean",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": false,
+      "pattern": "^\\+?[0-9][0-9\\- ]{7,14}$"
+    }
+  }
+}

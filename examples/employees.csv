@@ -1,0 +1,7 @@
+employee_id,full_name,email,department,salary,hire_date,is_active,phone
+1,Asha Rao,asha.rao@example.com,Engineering,120000,2019-04-01,true,+91 98765 43210
+2,Ben Carter,ben.carter@example.com,finance,95000,2021-11-15,yes,555-123-4567
+3,,carol@example.com,Engineering,88000,2020-01-09,true,
+4,Dev Patel,dev.patel-example.com,Marketing,not-a-number,2020-13-45,maybe,12
+1,Erin Shah,erin.shah@example.com,Sales,15000,1998-06-30,false,
+6,Farid Khan,ASHA.RAO@example.com,HR,64000,2023-02-28,0,+1 4155550123
