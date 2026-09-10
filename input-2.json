@@ -1,0 +1,51 @@
+[
+  {
+    "name": "Rahul Sharma",
+    "email": "rahul.sharma@gmail.com",
+    "age": 25,
+    "phone": "9876543210",
+    "active": "yes"
+  },
+  {
+    "name": "Priya Singh",
+    "email": "priya.singhgmail.com",
+    "age": 28,
+    "phone": "9876543211",
+    "active": "yes"
+  },
+  {
+    "name": "Amit Verma",
+    "email": "amit.verma@gmail.com",
+    "age": 32,
+    "phone": "98765432",
+    "active": "no"
+  },
+  {
+    "name": "Neha Kapoor",
+    "email": "neha.kapoor@gmail.com",
+    "age": 24,
+    "phone": "9123456789",
+    "active": "yes"
+  },
+  {
+    "name": "",
+    "email": "rohit@gmail.com",
+    "age": 30,
+    "phone": "9988776655",
+    "active": "yes"
+  },
+  {
+    "name": "Sneha Patel",
+    "email": "sneha.patel@gmail.com",
+    "age": "twenty-five",
+    "phone": "8877665544",
+    "active": "no"
+  },
+  {
+    "name": "Arjun Mehta",
+    "email": "arjun.mehta@gmail.com",
+    "age": 145,
+    "phone": "7766554433",
+    "active": "maybe"
+  }
+]
