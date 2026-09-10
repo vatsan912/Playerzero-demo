@@ -225,7 +225,7 @@ def validate_header(header, config, violations):
     return missing
 
 
-def validate_file(csv_path, config, delimiter=None, encoding="utf-8"):
+def validate_file(csv_path, config, delimiter=None, encoding="utf-8-sig"):
     columns = config["columns"]
     delimiter = delimiter or config.get("delimiter", ",")
     unique_columns = [name for name, spec in columns.items() if spec.get("unique", False)]
@@ -237,6 +237,8 @@ def validate_file(csv_path, config, delimiter=None, encoding="utf-8"):
 
     with open(csv_path, "r", encoding=encoding, newline="") as handle:
         reader = csv.DictReader(handle, delimiter=delimiter)
+        if reader.fieldnames:
+            reader.fieldnames = [name.lstrip("\ufeff") for name in reader.fieldnames]
         missing = set(validate_header(reader.fieldnames, config, violations))
 
         for offset, row in enumerate(reader):
@@ -396,7 +398,12 @@ def build_parser():
         help="report format (default: text)",
     )
     parser.add_argument("-d", "--delimiter", help="CSV delimiter, overrides the config value")
-    parser.add_argument("-e", "--encoding", default="utf-8", help="input file encoding (default: utf-8)")
+    parser.add_argument(
+        "-e",
+        "--encoding",
+        default="utf-8-sig",
+        help="input file encoding, utf-8-sig also accepts a UTF-8 BOM (default: utf-8-sig)",
+    )
     parser.add_argument(
         "--max-records",
         type=int,

@@ -19,7 +19,7 @@ python3 validate_csv.py data.csv -c rules.json -f csv -o violations.csv
 | `-f, --format` | `text` (default), `json`, or `csv` |
 | `-o, --output` | Write the report to a file instead of stdout |
 | `-d, --delimiter` | Override the delimiter from the config |
-| `-e, --encoding` | Input encoding, default `utf-8` |
+| `-e, --encoding` | Input encoding, default `utf-8-sig` (plain UTF-8 plus an optional byte-order mark) |
 | `--max-records` | Cap invalid records listed in the text report (`0` = all, default 50) |
 | `--fail-on-error` | Exit `1` when any violation is found |
 
