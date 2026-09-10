@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Rahul Sharma",
+    "email": "rahul@gmail.com",
+    "age": 25,
+    "phone": "9876543210",
+    "active": "yes"
+  },
+  {
+    "name": "Priya Singh",
+    "email": "priya.gmail.com",
+    "age": 27,
+    "phone": "987654321",
+    "active": "yes"
+  },
+  {
+    "name": "",
+    "email": "amit@example.com",
+    "age": 150,
+    "phone": "9876543210",
+    "active": "maybe"
+  },
+  {
+    "name": "Neha",
+    "email": "neha@example.com",
+    "age": "twenty",
+    "phone": "9123456789",
+    "active": "no"
+  }
+]
