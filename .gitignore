@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+module_01/sample_image.jpg
+module_01/cropped_output.jpg
