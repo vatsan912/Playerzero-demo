@@ -1,104 +1,78 @@
-# Autonomous Codebase Remediation Audit
+# Issue Resolution & Verification Audit
 
-Repository: `vatsan912/Playerzero-demo` · Branch: `priyanshu-test` · Date: 2026-09-11
+## 1. Execution Overview
 
-Code remediation commit: `bfa800b` — *fix: autonomous remediation of cart logic and boundary defects*
-(3 files changed: `README.md` M, `cart_service.py` M, `test_cart_service.py` A; 148 insertions, 12 deletions)
+- **Issue / Ticket Reference:** GitHub issue #2 — `vatsan912/Playerzero-demo` — add coupon application and cart quantity updates to `CartService`
+- **Base Branch:** `priyanshu-test` (at `c41d1d9`)
+- **Working Feature Branch:** `feat/resolve-issue-2`
+- **Commit SHA:** `53f07c70b35c00efebcb3c8386d4b571013cea14` (`53f07c7`) — *feat: resolve issue #2 - add coupon application and cart quantity updates*
+- **Resolution Status:** SUCCESS
 
-## 1. Executive Summary
+## 2. Scope & Implementation Details
 
-- **Run Status:** Success — every code defect was remediated and verified. One informational item (DEF-09) was deliberately deferred; it requires an owner decision, not a patch.
-- **Total Issues Detected:** 9
-- **Total Issues Remediated:** 8
-- **Verification Rate:** 88.9% of all detected issues (8/9); 100% of remediable code defects (8/8, DEF-01–DEF-08)
+### Files modified (3 files, +171 lines, 0 deletions)
 
-Scope audited: the full repository (4 files — `cart_service.py`, `README.md`, `requirements.txt`, `agents`). `cart_service.py` was the only source file and the only file requiring code patches; `README.md` served as the behavioral spec oracle and was corrected to match implemented semantics; a new `test_cart_service.py` was added.
+| File | Change |
+|---|---|
+| `cart_service.py` | New module-level `COUPON_DISCOUNTS` catalogue and two new `CartService` methods |
+| `test_cart_service.py` | 18 new test functions covering the new behaviour |
+| `README.md` | API documentation for both new methods and their exception contract |
 
-## 2. Defect Inventory & Categorization
+The diff against the base branch is purely additive: no pre-existing method body (`add_item`, `calculate_total`, `calculate_item_average_price`, `_subtotal`) was modified and no lines were removed from the existing test suite.
 
-| ID | File | Component | Category | Severity | Status |
-|---|---|---|---|---|---|
-| DEF-01 | `cart_service.py` | `CartService.calculate_total` | Logic Errors | High | Resolved |
-| DEF-02 | `cart_service.py` | `CartService.calculate_total` | Input & Type Validation Flaws | Medium | Resolved |
-| DEF-03 | `cart_service.py` | `CartService.calculate_item_average_price` | Boundary & Exception Flaws | High | Resolved |
-| DEF-04 | `cart_service.py` | `CartService.calculate_item_average_price` | Logic Errors | Medium | Resolved |
-| DEF-05 | `cart_service.py` | `CartService.add_item` | Input & Type Validation Flaws | Medium | Resolved |
-| DEF-06 | `cart_service.py` | `CartService.add_item` | Anti-Patterns & Code Smells | Low | Resolved |
-| DEF-07 | `cart_service.py` | `calculate_total` / `calculate_item_average_price` | Anti-Patterns & Code Smells | Low | Resolved |
-| DEF-08 | repository root (`requirements.txt`, `README.md`) | Test suite | Anti-Patterns & Code Smells | Medium | Resolved |
-| DEF-09 | `agents` | Repository hygiene | Anti-Patterns & Code Smells | Informational | Unresolved |
+### Key changes implemented
 
-Severity roll-up: 2 High, 4 Medium, 2 Low, 1 Informational.
+- **`COUPON_DISCOUNTS`** — module-level promo-code catalogue: `WELCOME10` (10%), `VIP20` (20%), `FLASH50` (50%).
+- **`apply_coupon(coupon_code) -> float`** — returns the cart total after applying the coupon's percentage discount. Codes are normalized for case and surrounding whitespace before lookup. Percentage math is delegated to the existing `calculate_total`, so discount semantics stay in one place. The cart is never mutated, on success or on rejection.
+- **`update_quantity(item_name, new_quantity) -> dict`** — sets the quantity of an item already in the cart and returns a defensive copy of the updated item, so a caller mutating the return value cannot corrupt cart state.
 
-## 3. Remediation Breakdown
+### Validation and error handling introduced
 
-### DEF-01 — Discount applied as a flat currency subtraction instead of a percentage
-- **Root Cause & Description:** `calculate_total` returned `total - discount_percent`, subtracting the percent value as an absolute currency amount. The parameter is named `discount_percent` and `README.md` specifies a percentage discount, so a 10.0 argument must remove 10% of the total. Every non-zero discount produced a wrong total, and small carts could go negative.
-- **Remediation Strategy Applied:** Return `self._subtotal() * (1.0 - discount_percent / 100.0)`. A 20.0 cart at 10% now returns 18.0.
+Validation runs before any mutation, and the type/value split follows the existing conventions of the module (`TypeError` for wrong types, `ValueError` for out-of-domain values):
 
-### DEF-02 — `discount_percent` not range- or type-validated
-- **Root Cause & Description:** No check that the discount was a number within `[0, 100]`. Negative values silently inflated the total, values above 100 produced a negative total, and non-numeric values raised a bare `TypeError` from the arithmetic with no domain context.
-- **Remediation Strategy Applied:** Require a `numbers.Real` (explicitly rejecting `bool`) → `TypeError`; require `0 <= discount_percent <= 100` → `ValueError`. Both raise plain-language messages, and a rejected call leaves the cart unmodified.
+| Condition | Behaviour |
+|---|---|
+| Non-string coupon code | `TypeError` |
+| Empty, whitespace-only, or unrecognized coupon code | `ValueError("Invalid coupon code")` |
+| Non-string item name | `TypeError` |
+| Non-integer quantity (including `bool`, `float`, `str`, `None`) | `TypeError` |
+| Quantity `<= 0` | `ValueError("Quantity must be greater than zero")` |
+| Item name not present in the cart | `KeyError("Item not found in cart")` |
 
-### DEF-03 — `ZeroDivisionError` when averaging an empty cart
-- **Root Cause & Description:** `calculate_item_average_price` divided by `len(self.items)` unconditionally, so a freshly constructed `CartService` raised an unhandled `ZeroDivisionError`. The empty-cart boundary was unguarded.
-- **Remediation Strategy Applied:** Return `0.0` when total quantity is zero, before any division is attempted.
+Every rejected call leaves the cart exactly as it was.
 
-### DEF-04 — Average price mixed a quantity-weighted numerator with an item-count denominator
-- **Root Cause & Description:** The numerator accumulated `price * quantity` (total cart value) while the denominator was the number of distinct line items. The result was neither the mean unit price nor the mean line-item value, and was wrong for any item with quantity other than 1.
-- **Remediation Strategy Applied:** Divide the quantity-weighted subtotal by total quantity, yielding a true average price per unit (e.g. 10.0×2 + 4.0×2 → 7.0). The zero-quantity case is guarded together with DEF-03.
+## 3. Test & Verification Report
 
-### DEF-05 — `add_item` accepted invalid name, price, and quantity
-- **Root Cause & Description:** Type hints were not enforced at runtime and no range checks existed, so empty/`None` names, negative or non-numeric prices, and zero/negative/non-integer quantities entered `self.items`. Bad values surfaced later as corrupt totals or as an opaque `TypeError` far from the offending call.
-- **Remediation Strategy Applied:** Validate at the boundary before mutating state — `name` must be a non-empty `str`, `price` a non-negative `Real`, `quantity` a positive `int` (`bool` rejected for both numerics) — raising `TypeError` / `ValueError` as appropriate.
+### Executed suites
 
-### DEF-06 — `add_item` returned a live reference to the internal item dict
-- **Root Cause & Description:** The same dict object was both stored in `self.items` and handed to the caller, so external mutation silently rewrote cart state and bypassed the new validation.
-- **Remediation Strategy Applied:** Return `dict(item)` — a defensive copy that is equal to, but distinct from, the stored item.
+| Metric | Result |
+|---|---|
+| Test functions collected | 34 |
+| Parametrized cases executed | 64 |
+| Passed / Failed | **64 / 0** (100%) |
+| New cases for issue #2 | 35 cases across 17 functions — all pass |
+| Pre-existing cases | 29 cases across 17 functions — all pass |
+| Regression gate (base-branch suite vs. new source) | 29 / 29 pass |
+| Mutation anti-vacuity check | 6 / 6 injected mutants detected |
+| Syntax check (`py_compile`) | Clean |
 
-### DEF-07 — Duplicated cart-total summation logic
-- **Root Cause & Description:** The `price * quantity` accumulation loop was written twice, so divergent edits to one copy could make the two public methods disagree.
-- **Remediation Strategy Applied:** Extract a single private `_subtotal()` helper used by both public calculation methods; the multiplication now appears exactly once in the source.
+`pytest` is not installable in the execution sandbox, so the unmodified test file was executed through a minimal pytest-compatible shim (supporting `approx`, `raises(..., match=...)`, and `mark.parametrize`) kept outside the repository. Real test bodies and real `cart_service` code ran unchanged; no test scaffolding was added to the repository.
 
-### DEF-08 — No test coverage despite a documented test workflow
-- **Root Cause & Description:** `pytest` was a declared dependency and `README.md` documented `pytest` as the test command, but no test module existed — none of the defects above would have been caught by the project's own stated workflow.
-- **Remediation Strategy Applied:** Added `test_cart_service.py` at the repository root as a pytest module (17 test functions, 29 parametrized cases) covering percentage discount, discount bounds and types, empty-cart average, quantity-weighted average, `add_item` validation, no-mutation-on-error, and the returned-copy contract.
+### Validation status by path
 
-### DEF-09 — Stray empty `agents` file (deferred)
-- **Root Cause & Description:** A 1-byte extensionless file containing only a newline, referenced by no source, docs, or config — it reads as dead scaffolding.
-- **Remediation Strategy Applied:** None. Deleting a tracked file is a destructive change requiring owner confirmation, so the file was intentionally left in place and flagged. This is an informational hygiene item, not a code defect.
+- **Nominal paths — PASS.** All three coupon codes yield the correct discounted total; quantity updates are reflected in the cart, in the cart total, and in the average unit price.
+- **Edge cases — PASS.** Coupon code case/whitespace normalization; coupon on an empty cart returns `0.0` without error; quantity-weighted multi-item carts; other cart items untouched by an update; returned item dictionary is an isolated copy; cart unchanged after both successful and rejected coupon calls.
+- **Boundary conditions — PASS.** Lower-bound quantity of `1` accepted; `0`, `-1`, `-10` rejected; the full type-rejection matrix for coupon codes, item names, and quantities (with `bool` explicitly rejected as a quantity); unknown item and empty-cart lookups raise `KeyError`.
+- **Anti-vacuity — PASS.** Six deliberately injected defects (dropped normalization, wrong `VIP20` rate, quantity `0` allowed, skipped coupon type check, live dict returned instead of a copy, missing `KeyError`) were each caught by the suite, confirming the assertions are meaningful rather than trivially green.
 
-### Constraints honored across all patches
-- Stdlib only — the sole added imports are `numbers.Real` and `typing`; no runtime dependency introduced.
-- Public method names, signatures, and defaults unchanged: `add_item(self, name, price, quantity=1)`, `calculate_total(self, discount_percent=0.0)`. The README usage example still runs.
-- House style preserved: module docstring, PEP 484 hints, float returns, no inline comments.
-- Exception discipline: `TypeError` for wrong types, `ValueError` for out-of-domain values, each with a clear message.
+No iterative refinement was required: the suite passed on its first full execution.
 
-## 4. Verification & Validation Summary
+## 4. Pull Request & Delivery Status
 
-**Execution caveat, stated plainly:** `pytest` is **not installed** in the audit sandbox, so the delivered suite could not be run under its declared runner. "Green under pytest" has **not** been demonstrated. Two independent stdlib executions were used instead:
+- **Push confirmed.** `feat/resolve-issue-2` was pushed with `git push -u origin feat/resolve-issue-2` to `https://github.com/vatsan912/Playerzero-demo.git`; the branch was created fresh on the remote and the local branch tracks `origin/feat/resolve-issue-2`. The working tree is clean.
+- **Ready for review.** The branch is ready for a pull request into the base branch `priyanshu-test`. No PR was opened — that is outside the scope of this automated run.
+- **PR creation URL:** https://github.com/vatsan912/Playerzero-demo/pull/new/feat/resolve-issue-2
 
-1. **The delivered suite, executed unmodified.** A minimal stdlib shim providing `pytest.approx`, `pytest.raises`, and `pytest.mark.parametrize` ran `test_cart_service.py` as written: **29/29 parametrized cases passed** (17 test functions), 0 failed.
-2. **An independent check suite written at the validation stage** (not derived from the remediation stage's own harness), covering normal execution, edge cases, invalid input, adjacent behavior, and a pre-patch baseline: **73/73 checks passed**.
+---
 
-**The checks are discriminating, not vacuous.** The pre-patch `cart_service.py` loaded from `HEAD` still reproduces DEF-01 (flat 10.0 total), DEF-03 (`ZeroDivisionError`), and DEF-04 (20.0 average) under the same checks, proving they distinguish broken code from fixed code.
-
-**Edge-case evaluation:**
-- Discount bounds 0 and 100 accepted inclusively; `-0.01`, `-1`, `100.1`, `1e9`, `NaN`, `inf` rejected with `ValueError`; `"10"`, `None`, `True`, `False`, `[]`, `{}`, and complex rejected with `TypeError`; `Fraction` accepted.
-- Empty cart: average → `0.0`, `calculate_total(25.0)` → `0.0`; no exception.
-- 22 invalid-input probes across name/price/quantity all raised the correct exception type; after 6 rejected inserts, `items == []`.
-- Boundary values `price=0.0` and `quantity=1` accepted; large values (1e6 × 1000 at 50% → 5e8) arithmetically sane.
-- 500 randomized carts matched a `subtotal * (1 - d/100)` oracle exactly and a `subtotal / total_quantity` oracle exactly; the total never went negative for any valid discount.
-
-**Regression risk assessment — low.** All adjacent-behavior checks passed:
-- Public API surface unchanged (`add_item`, `calculate_total`, `calculate_item_average_price`, `items`); `items` still starts empty.
-- Signatures and defaults preserved; the README usage example returns 18.0.
-- `calculate_total` is side-effect free: repeated calls are stable and do not touch `items`.
-- Validation is not over-tightened: duplicate item names, `price=0.0`, integer prices, and integer discounts all still accepted (integer price coerced to `float` on store).
-- Both public methods return `float`; the two methods agree — `average × total_quantity == total` across 200 randomized carts.
-- `python3 -m py_compile` passes on both Python files; `README.md` now matches implemented semantics, so spec and code no longer disagree.
-
-**Open items (non-blocking):**
-- DEF-08 cannot be formally closed under its declared runner until `pytest` is available in an environment that runs this repo. The suite is valid pytest — it compiles and every case passes under the shim.
-- The delivered suite does not cover `NaN`/`inf` discounts or the `average × total_quantity == total` invariant; both are covered by the independent checks and both pass. Worth folding into `test_cart_service.py` on a future pass.
-- DEF-09 needs a human decision (delete the stray `agents` file, or keep it). Nothing in the repository references it.
+*Note: this file replaces the earlier "Autonomous Codebase Remediation Audit" that documented the separate defect-remediation run on `priyanshu-test`. That audit remains available in git history at commit `c41d1d9`.*
