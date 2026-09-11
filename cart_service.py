@@ -3,6 +3,12 @@
 from numbers import Real
 from typing import Any, Dict, List
 
+COUPON_DISCOUNTS: Dict[str, float] = {
+    "WELCOME10": 10.0,
+    "VIP20": 20.0,
+    "FLASH50": 50.0,
+}
+
 
 class CartService:
     def __init__(self):
@@ -31,6 +37,27 @@ class CartService:
         if not 0.0 <= float(discount_percent) <= 100.0:
             raise ValueError("discount_percent must be between 0 and 100")
         return self._subtotal() * (1.0 - float(discount_percent) / 100.0)
+
+    def apply_coupon(self, coupon_code: str) -> float:
+        if not isinstance(coupon_code, str):
+            raise TypeError("coupon_code must be a string")
+        normalized = coupon_code.strip().upper()
+        if normalized not in COUPON_DISCOUNTS:
+            raise ValueError("Invalid coupon code")
+        return self.calculate_total(COUPON_DISCOUNTS[normalized])
+
+    def update_quantity(self, item_name: str, new_quantity: int) -> Dict[str, Any]:
+        if not isinstance(item_name, str):
+            raise TypeError("item_name must be a string")
+        if isinstance(new_quantity, bool) or not isinstance(new_quantity, int):
+            raise TypeError("quantity must be an integer")
+        if new_quantity <= 0:
+            raise ValueError("Quantity must be greater than zero")
+        for item in self.items:
+            if item["name"] == item_name:
+                item["quantity"] = new_quantity
+                return dict(item)
+        raise KeyError("Item not found in cart")
 
     def calculate_item_average_price(self) -> float:
         total_quantity = sum(item["quantity"] for item in self.items)
