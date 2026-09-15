@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Vikram Malhotra",
+    "email": "vikram.malhotra@gmail.com",
+    "age": 29,
+    "phone": "9812345670",
+    "active": "yes"
+  },
+  {
+    "name": "Ananya Gupta",
+    "email": "ananya.gupta@gmail.com",
+    "age": 26,
+    "phone": "9823456781",
+    "active": "no"
+  },
+  {
+    "name": "Karan Joshi",
+    "email": "karan.joshi@gmail.com",
+    "age": 34,
+    "phone": "9834567892",
+    "active": "yes"
+  },
+  {
+    "name": "Meera Iyer",
+    "email": "meera.iyer@gmail.com",
+    "age": 31,
+    "phone": "9845678903",
+    "active": "yes"
+  },
+  {
+    "name": "Rohan Desai",
+    "email": "rohan.desai@gmail",
+    "age": 27,
+    "phone": "9856789034",
+    "active": "yes"
+  },
+  {
+    "name": "Pooja Nair",
+    "email": "pooja.nair@gmail.com",
+    "age": 22,
+    "phone": "985678903",
+    "active": "no"
+  },
+  {
+    "name": "Siddharth Rao",
+    "email": "siddharth.rao@gmail.com",
+    "age": "thirty",
+    "phone": "9867890145",
+    "active": "yes"
+  },
+  {
+    "name": "Tanya Kapoor",
+    "email": "tanya.kapoor@gmail.com",
+    "age": 130,
+    "phone": "9878901256",
+    "active": "yes"
+  },
+  {
+    "name": "Aditya Sharma",
+    "email": "aditya.sharma@gmail.com",
+    "age": 28,
+    "phone": "9889012367",
+    "active": "maybe"
+  },
+  {
+    "name": "Nisha Verma",
+    "email": "nisha.verma@gmail.com",
+    "age": 35,
+    "phone": "9890123478",
+    "active": "no"
+  }
+]
