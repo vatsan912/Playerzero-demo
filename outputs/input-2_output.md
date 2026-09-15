@@ -1,28 +1,35 @@
-# Customer Validation Report — input-2.json
+# Validation Report — `input-2.json`
 
-**7 records checked: 2 passed, 5 failed.**
+**7 records checked — 2 passed, 5 failed.** Every record was evaluated; none were skipped.
 
-- Branch: `uddeshya-test`
-- Data file: `input-2.json` (repository root)
-- Command: `python3 customer_validator.py input-2.json`
-- Exit status: 0 (the validator exits 0 even when records fail — the outcome above is read from the report text)
-- Records the validator could not evaluate: none
+## Run details
+
+| Item | Value |
+|---|---|
+| Branch | `uddeshya-test` (HEAD `56f6716`) |
+| Data file | `input-2.json` (repository root) |
+| Validator | `customer_validator.py` (repository root) |
+| Command | `python3 customer_validator.py input-2.json` (run from repo root) |
+| Exit status | `0` — not a pass/fail signal; outcome read from the report text |
 
 ## Failures
 
-| # | Name | Problem |
-|---|------|---------|
-| 2 | Priya Singh | Email is missing the `@` — `priya.singhgmail.com` |
-| 3 | Amit Verma | Phone has 8 digits, needs exactly 10 — `98765432` |
-| 5 | (blank) | Name is empty |
-| 6 | Sneha Patel | Age is text (`"twenty-five"`), needs a whole number |
-| 7 | Arjun Mehta | Age 145 is outside 0–120, and `active` is `maybe` (must be `yes` or `no`) |
+| # | Customer | Why it failed |
+|---|---|---|
+| 2 | Priya Singh | Invalid email format: `priya.singhgmail.com` (no `@`) |
+| 3 | Amit Verma | Phone must contain exactly 10 digits: `98765432` (8 digits) |
+| 5 | *(blank name)* | Name cannot be empty |
+| 6 | Sneha Patel | Age must be an integer, got `str` (`"twenty-five"`) |
+| 7 | Arjun Mehta | Two problems: age must be between 0 and 120, got `145`; active must be `yes` or `no`, got `maybe` |
 
-Passed: record 1 (Rahul Sharma) and record 4 (Neha Kapoor).
+Passed: **Customer 1 (Rahul Sharma)** and **Customer 4 (Neha Kapoor)**.
+
+Unevaluated records: **none**.
 
 ## Validator output (verbatim)
 
 ```
+
 ============================================================
              CUSTOMER VALIDATION REPORT
 ============================================================
@@ -56,6 +63,4 @@ Invalid customers : 5
 ============================================================
 ```
 
-## Export
-
-Pending approval — see the Export Report to Branch stage.
+No data or validator files were changed by this run.
