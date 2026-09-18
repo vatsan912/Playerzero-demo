@@ -111,6 +111,39 @@ def test_add_item_returns_a_copy_of_the_stored_item():
     assert cart.calculate_total() == pytest.approx(20.0)
 
 
+def test_add_item_merges_repeated_names_into_one_line():
+    cart = CartService()
+    cart.add_item("widget", 10.0, 2)
+    returned = cart.add_item("widget", 10.0, 3)
+    assert cart.items == [{"name": "widget", "price": 10.0, "quantity": 5}]
+    assert returned == {"name": "widget", "price": 10.0, "quantity": 5}
+    assert cart.calculate_total() == pytest.approx(50.0)
+
+
+def test_add_item_rejects_a_repeated_name_with_a_different_price():
+    cart = CartService()
+    cart.add_item("widget", 10.0, 2)
+    with pytest.raises(ValueError):
+        cart.add_item("widget", 12.0)
+    assert cart.items == [{"name": "widget", "price": 10.0, "quantity": 2}]
+
+
+def test_add_item_keeps_differently_named_items_separate():
+    cart = CartService()
+    cart.add_item("widget", 10.0)
+    cart.add_item("Widget", 10.0)
+    assert len(cart.items) == 2
+
+
+def test_update_quantity_sets_the_total_quantity_of_a_merged_item():
+    cart = CartService()
+    cart.add_item("widget", 10.0, 2)
+    cart.add_item("widget", 10.0, 1)
+    assert cart.update_quantity("widget", 4)["quantity"] == 4
+    assert cart.items == [{"name": "widget", "price": 10.0, "quantity": 4}]
+    assert cart.calculate_total() == pytest.approx(40.0)
+
+
 @pytest.mark.parametrize(
     ("coupon_code", "expected_total"),
     [("WELCOME10", 90.0), ("VIP20", 80.0), ("FLASH50", 50.0)],

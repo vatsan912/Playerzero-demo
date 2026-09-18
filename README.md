@@ -7,7 +7,10 @@ that tracks items (name, price, quantity) and computes order totals.
 
 - `add_item(name, price, quantity=1)` — add an item to the cart. `name` must be a non-empty
   string, `price` a non-negative number, and `quantity` a positive integer; invalid input
-  raises `TypeError` or `ValueError` and nothing is added to the cart.
+  raises `TypeError` or `ValueError` and nothing is added to the cart. The name identifies the
+  item, so adding a name already in the cart adds to that item's quantity instead of creating a
+  second entry; names are compared exactly, and re-adding a name at a different price raises
+  `ValueError` and leaves the cart unchanged.
 - `calculate_total(discount_percent=0.0)` — total price of the cart after applying a
   percentage discount. `discount_percent` must be a number between 0 and 100.
 - `apply_coupon(coupon_code)` — total price of the cart after applying a promo code. Supported

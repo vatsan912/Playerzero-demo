@@ -1,7 +1,7 @@
 """Simple shopping cart utility module."""
 
 from numbers import Real
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 COUPON_DISCOUNTS: Dict[str, float] = {
     "WELCOME10": 10.0,
@@ -27,6 +27,14 @@ class CartService:
             raise TypeError("quantity must be an integer")
         if quantity < 1:
             raise ValueError("quantity must be a positive integer")
+        existing = self._find_item(name)
+        if existing is not None:
+            if existing["price"] != float(price):
+                raise ValueError(
+                    "price does not match the price of the item already in the cart"
+                )
+            existing["quantity"] += quantity
+            return dict(existing)
         item = {"name": name, "price": float(price), "quantity": quantity}
         self.items.append(item)
         return dict(item)
@@ -53,17 +61,23 @@ class CartService:
             raise TypeError("quantity must be an integer")
         if new_quantity <= 0:
             raise ValueError("Quantity must be greater than zero")
-        for item in self.items:
-            if item["name"] == item_name:
-                item["quantity"] = new_quantity
-                return dict(item)
-        raise KeyError("Item not found in cart")
+        item = self._find_item(item_name)
+        if item is None:
+            raise KeyError("Item not found in cart")
+        item["quantity"] = new_quantity
+        return dict(item)
 
     def calculate_item_average_price(self) -> float:
         total_quantity = sum(item["quantity"] for item in self.items)
         if total_quantity <= 0:
             return 0.0
         return self._subtotal() / total_quantity
+
+    def _find_item(self, name: str) -> Optional[Dict[str, Any]]:
+        for item in self.items:
+            if item["name"] == name:
+                return item
+        return None
 
     def _subtotal(self) -> float:
         total = 0.0
